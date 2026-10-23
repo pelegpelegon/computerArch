@@ -13,6 +13,7 @@
     user_guess: .skip 4, 0x0
     user_seed: .skip 4, 0x0
     rolled_number: .skip 4
+    rounds_left: .skip 4
     difficulty: .skip 1
     double_or_nothing_answer: .skip 1
 
@@ -122,9 +123,13 @@ main:
     xorq %rax, %rax
     call printf
 
+    # intialzes the number of rounds left
+    movl M, %edx
+    movl %edx, rounds_left
+
     # checks the users difficulty answer
     movb difficulty, %bl
-    # compares answer to "n" (no to easy mode)
+    # compares answer to "n" (no to easy mode) and starts the game
     cmpb $0x6E, %bl
     je .normal_mode
     jmp .easy_mode
@@ -133,26 +138,73 @@ main:
 
 
 .easy_mode:
-
-.normal_mode:
-
-
+    # asks for a guess
     movq $enter_guess, %rdi
     xorq %rax, %rax
     call printf
 
+    # gets user's guess
     movq $scanf_get_int, %rdi
     movq $user_guess, %rsi
     xorq %rax, %rax
     call scanf
 
+    # compares user's guess with the rolled number
     movl user_guess, %eax
     movl rolled_number, %ebx
     cmpl %eax, %ebx
     je .currect_guess
 
+    # prints "incorrect" and goes to the next iteration
+    movq $wrong_guess, %rdi
+    xorq %rax, %rax
+    call printf
+    jmp .easy_next
 
 
+.normal_mode:
+
+    # asks for a guess
+    movq $enter_guess, %rdi
+    xorq %rax, %rax
+    call printf
+
+    # gets user's guess
+    movq $scanf_get_int, %rdi
+    movq $user_guess, %rsi
+    xorq %rax, %rax
+    call scanf
+
+    # compares user's guess with the rolled number
+    movl user_guess, %eax
+    movl rolled_number, %ebx
+    cmpl %eax, %ebx
+    je .currect_guess
+
+    # prints "incorrect" and goes to the next iteration
+    movq $wrong_guess, %rdi
+    xorq %rax, %rax
+    call printf
+    jmp .normal_next
+
+
+.normal_next:
+    # decrementing the rounds left variable, and if at 0 ends game
+    decl rounds_left
+    xorq %rax, %rax
+    movl rounds_left, %ecx
+    cmpl %ecx, %eax
+    je .lost_game
+    jmp .normal_mode
+
+.easy_next:
+    # decrementing the rounds left variable, and if at 0 ends game
+    decl rounds_left
+    xorq %rax, %rax
+    movl rounds_left, %ecx
+    cmpl %ecx, %eax
+    je .lost_game
+    jmp .easy_mode
 
 .currect_guess:
     # adds one win
@@ -172,15 +224,16 @@ main:
     movb double_or_nothing_answer, %bl
     # compares answer to "n" (no to double or nothing)
     cmpb $0x6E, %bl
-    je .end_game
+    je .won_game
     
     # when the answer is yes to double or nothing
 
-    # multiplies N and the seed by 2
+    # multiplies N by 2
     movl N, %ebx
     shll $1, %ebx
     movl %ebx, N
 
+    # multiplies the seed by 2
     movl user_seed, %ebx
     shll $1, %ebx
     movl %ebx, user_seed
@@ -190,11 +243,27 @@ main:
     xorq %rax, %rax
     call srand
 
+    # restarts the game
     jmp .roll_number
 
+.lost_game:
+    # prints losing massage and exists
+    movq $lose_massage, %rdi
+    movl rolled_number, %esi
+    xorq %rax, %rax
+    call printf
+    jmp .exit
+
+.won_game:
+    # prints winning massage and exists
+    movq $win_massage, %rdi
+    movl rounds_won, %esi
+    xorq %rax, %rax
+    call printf
+    jmp .exit
 
 
-.end_game:
+.exit:
     # Exit
     xorq %rax, %rax
     movq %rbp, %rsp
