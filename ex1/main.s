@@ -25,7 +25,7 @@ wrong_guess:
 win_massage:
     .string "Congratz! You won %d rounds!\n"
 lose_massage:
-    .string "\nGame over, you lost :(. The correct answer was %d"
+    .string "Game over, you lost :(. The correct answer was %d \n"
 enter_guess:
     .string "What is your guess? "
 double_or_nothing:
@@ -40,6 +40,9 @@ scanf_get_int:
     .string "%d"
 scanf_get_char:
     .string " %c"
+line_drop:
+    .string "\n"
+
 
 test_show_num:
     .string "%d this is the number\n"
@@ -48,7 +51,7 @@ test_show_num:
 .global main
 .type   main, @function
 main:
-    # not sure 
+    # Enter
     pushq %rbp
     movq %rsp, %rbp
 
@@ -71,6 +74,7 @@ main:
     call srand
 
     jmp .set_difficulty
+
 
 .set_difficulty:
     # asks if the user want easy mode
@@ -135,8 +139,6 @@ main:
     jmp .easy_mode
 
 
-
-
 .easy_mode:
     # asks for a guess
     movq $enter_guess, %rdi
@@ -155,8 +157,30 @@ main:
     cmpl %eax, %ebx
     je .currect_guess
 
-    # prints "incorrect" and goes to the next iteration
+    # prints that the answer was wrongs
     movq $wrong_guess, %rdi
+    xorq %rax, %rax
+    call printf
+
+    # checks if the answer was above or below the actual answer
+    movl user_guess, %eax
+    movl rolled_number, %ebx
+    cmpl %eax, %ebx
+    jg .easy_mode_answer_below
+    jmp .easy_mode_answer_above
+
+
+.easy_mode_answer_above:
+    # prints that the answer was above and goes to the next iteration
+    movq $number_above, %rdi
+    xorq %rax, %rax
+    call printf
+    jmp .easy_next
+
+
+.easy_mode_answer_below:
+    # prints that the answer was below and goes to the next iteration
+    movq $number_below, %rdi
     xorq %rax, %rax
     call printf
     jmp .easy_next
@@ -194,8 +218,9 @@ main:
     xorq %rax, %rax
     movl rounds_left, %ecx
     cmpl %ecx, %eax
-    je .lost_game
+    je .line_drop_for_normal_mode
     jmp .normal_mode
+
 
 .easy_next:
     # decrementing the rounds left variable, and if at 0 ends game
@@ -205,6 +230,7 @@ main:
     cmpl %ecx, %eax
     je .lost_game
     jmp .easy_mode
+
 
 .currect_guess:
     # adds one win
@@ -246,6 +272,13 @@ main:
     # restarts the game
     jmp .roll_number
 
+
+.line_drop_for_normal_mode:
+    movq $line_drop, %rdi
+    xorq %rax, %rax
+    call printf
+
+
 .lost_game:
     # prints losing massage and exists
     movq $lose_massage, %rdi
@@ -253,6 +286,7 @@ main:
     xorq %rax, %rax
     call printf
     jmp .exit
+
 
 .won_game:
     # prints winning massage and exists
@@ -269,5 +303,3 @@ main:
     movq %rbp, %rsp
     popq %rbp
     ret
-
-
