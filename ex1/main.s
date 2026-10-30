@@ -43,10 +43,6 @@ scanf_get_char:
 line_drop:
     .string "\n"
 
-
-test_show_num:
-    .string "%d this is the number\n"
-
 .section .text
 .global main
 .type   main, @function
@@ -100,30 +96,6 @@ main:
     divl %ecx # here rdx in range 0 to N - 1
     incl %edx # here rdx in range 1 to N
     movl %edx, rolled_number
-
-    /*
-
-
-
-
-
-
-            THIS IS FOR TESTING REMOVE LATER
-                        |
-                        |
-                        |
-                        |
-                        |
-                        \/
-
-
-
-
-    */
-    movq $test_show_num, %rdi
-    movl rolled_number, %esi
-    xorq %rax, %rax
-    call printf
 
     # intializes the number of rounds left
     movl M, %edx
