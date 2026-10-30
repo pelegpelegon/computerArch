@@ -22,9 +22,9 @@ enter_config:
     .string "Enter configuration seed: "
 wrong_guess:
     .string "Incorrect. "
-win_massage:
+win_message:
     .string "Congratz! You won %d rounds!\n"
-lose_massage:
+lose_message:
     .string "Game over, you lost :(. The correct answer was %d \n"
 enter_guess:
     .string "What is your guess? "
@@ -55,8 +55,6 @@ main:
     pushq %rbp
     movq %rsp, %rbp
 
-
-
     # asks for a seed number
     movq $enter_config, %rdi
     xorq %rax, %rax
@@ -68,8 +66,8 @@ main:
     xorq %rax, %rax
     call scanf
 
-    # intializes rand's seed
-    movq user_seed, %rdi
+    # initializes rand's seed
+    movl user_seed, %edi
     xorq %rax, %rax
     call srand
 
@@ -77,7 +75,7 @@ main:
 
 
 .set_difficulty:
-    # asks if the user want easy mode
+    # asks if the user wants easy mode
     movq $ask_difficulty, %rdi
     xorq %rax, %rax
     call printf
@@ -96,7 +94,7 @@ main:
     xorq %rax, %rax
     call rand
 
-    # gets the mudolu of the rolled number to get 1 to N
+    # gets the modulo of the rolled number to get 1 to N
     xorq %rdx, %rdx
     movl N, %ecx
     divl %ecx # here rdx in range 0 to N - 1
@@ -127,7 +125,7 @@ main:
     xorq %rax, %rax
     call printf
 
-    # intialzes the number of rounds left
+    # intializes the number of rounds left
     movl M, %edx
     movl %edx, rounds_left
 
@@ -155,9 +153,9 @@ main:
     movl user_guess, %eax
     movl rolled_number, %ebx
     cmpl %eax, %ebx
-    je .currect_guess
+    je .correct_guess
 
-    # prints that the answer was wrongs
+    # prints that the answer was wrong
     movq $wrong_guess, %rdi
     xorq %rax, %rax
     call printf
@@ -203,7 +201,7 @@ main:
     movl user_guess, %eax
     movl rolled_number, %ebx
     cmpl %eax, %ebx
-    je .currect_guess
+    je .correct_guess
 
     # prints "incorrect" and goes to the next iteration
     movq $wrong_guess, %rdi
@@ -232,7 +230,7 @@ main:
     jmp .easy_mode
 
 
-.currect_guess:
+.correct_guess:
     # adds one win
     incl rounds_won
 
@@ -265,7 +263,7 @@ main:
     movl %ebx, user_seed
 
     # changes rand's seed
-    movq user_seed, %rdi
+    movl user_seed, %edi
     xorq %rax, %rax
     call srand
 
@@ -280,8 +278,8 @@ main:
 
 
 .lost_game:
-    # prints losing massage and exists
-    movq $lose_massage, %rdi
+    # prints losing message and exits
+    movq $lose_message, %rdi
     movl rolled_number, %esi
     xorq %rax, %rax
     call printf
@@ -289,8 +287,8 @@ main:
 
 
 .won_game:
-    # prints winning massage and exists
-    movq $win_massage, %rdi
+    # prints winning message and exits
+    movq $win_message, %rdi
     movl rounds_won, %esi
     xorq %rax, %rax
     call printf
