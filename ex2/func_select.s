@@ -32,7 +32,7 @@ run_func:
 
     # subtracts 31 from the number input,
     # and compares it to 11 (the number of options in the jump table)
-    subl 31, %edi # edi = user's input (edi) - 31
+    subl $31, %edi # edi = user's input (edi) - 31
     cmpl $11, %edi
     ja .invalid_option
     jmp *jump_table(,%edi, 8) # goes to jump_table + edi * 8
