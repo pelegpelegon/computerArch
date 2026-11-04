@@ -28,9 +28,10 @@ invalid_message:
 message_length_31:
     .string "first pstring length: %d, second pstring length: %d\n"
 
-message_swapCase_33:
+message_print_pstr:
     .string "length: %d, string: %s\n"
-
+scanf_get_int:
+    .string "%d"
 
 
 .section .text
@@ -88,29 +89,12 @@ run_func:
     xorq %rax, %rax
     call swapCase
 
-    # prints and exists
-    movq %rdi, %r10 # r10 = second pstr address (rdi and rsi swapped earlier)
-    movq %rsi, %r11 # r11 = first pstr address
-    movq message_swapCase_33, %rdi
-
-    # prints first pstr
-    movq %r8, %rsi
-    movq 1(%r11), %rdx
-    xorq %rax, %rax
-    call printf
-
-    # prints the second pstr
-    movq %r9, %rsi
-    movq 1(%r10), %rdx
-    xorq %rax, %rax
-    call printf
-
-    jmp .exit
+    jmp .print_two_pstrs
 
 .chose_34:
 
 
-
+# MAKE SURE BEFORE I CALL A FUNCTION BACK UP EVERYTHING THATS ON REGISTER TO THE STACK IN CASE IT IS CHANGED
 
 .chose_41:
 .chose_42:
@@ -125,3 +109,24 @@ run_func:
     popq %rbp
     ret
 
+# MAKE SURE RDI = SECOND PSTR, RSI = FIRST PSTR
+# AND R8 = FIRST'S LENGTH, R9 = SECOND'S LENGTH
+.print_two_pstrs:
+    # prints and exists
+    movq %rdi, %r10 # r10 = second pstr address (rdi and rsi swapped earlier)
+    movq %rsi, %r11 # r11 = first pstr address
+    movq message_print_pstr, %rdi
+
+    # prints first pstr
+    movq %r8, %rsi
+    movq 1(%r11), %rdx
+    xorq %rax, %rax
+    call printf
+
+    # prints the second pstr
+    movq %r9, %rsi
+    movq 1(%r10), %rdx
+    xorq %rax, %rax
+    call printf
+
+    jmp .exit
