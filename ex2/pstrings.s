@@ -137,10 +137,10 @@ pstrijcpy:
 # loops through the strings range
 .pstrijcpy_loop:
     # saves the source's string i's char in r10
-    movq %rax(1, %rdx, 1), %r10
+    movb %rax(1, %rdx, 1), %r10b
 
     # put the char in dest
-    movq %r10, %r9(1, %rdx, 1)
+    movb %r10b, %r9(1, %rdx, 1)
 
     # increments to the next iteration
     incq %rdx
@@ -151,6 +151,7 @@ pstrijcpy:
 # in case the range is invalid prints what's needed
 .invalid_range:
     movq invalid_range_message, %rdi
+    xorq %rax, %rax
     call printf
     .jmp .pstrijcpy_exit
 
@@ -164,4 +165,149 @@ pstrijcpy:
 
 .global pstrcmp
 .type pstrcmp, @function
+pstrcmp:
+    # Enter
+    pushq %rbp
+    movq %rsp, %rbp
+
+    # gets pstr1's length
+    xorq %rax, %rax
+    call pstrlen
+
+    # gets pstr2's length
+    movq %rax, %rdx
+    xorq %rax, %rax
+    movq %rdi, %rcx
+    movq %rsi, %rdi
+    call pstrlen
+    movq %rcx, %rdi
+
+    # right now:
+    # rax = pstr2's length
+    # rdx = pstr1's length
+    # rdi points to pstr1
+    # rsi points to pstr2
+
+    # sets up the result to go to if the loop
+    # that goes through the strings and compares them finishes
+    # when both are equal until one of the strings end
+    # (the loop runs the length of the shorter string)
+    # when the first string is shorter then,
+    # it should go to the first being bigger when the loop ends and both are equal
+    # otherwise it should go to the first being smaller
+    # when lengths are equal it goes to them being equal
+    cmpq %rax, %rdx
+    xorq %r8, %r8
+    ja .first_length_bigger
+    jb .first_length_smaller
+
+.length_equal:
+    movq %rax, %rcx
+    pushq .both_equal
+    jmp .pstrcmp_loop
+
+.first_length_bigger:
+    movq %rax, %rcx
+    pushq .first_smaller
+    jmp .pstrcmp_loop
+
+.first_length_smaller:
+    movq %rdx, %rcx
+    pushq .first_bigger
+    jmp .pstrcmp_loop
+
+# runs rcx times (the counter is saved on r8), and goes through the strings together
+.pstrcmp_loop:
+    movb %rdi(1, %r8, 1),%r9b # pstr1's r8's char
+    movb %rsi(1, %r8, 1),%r10b # pstr2's r8's char
+
+    cmp %r10b, %r9b
+    jb .first_smaller
+    ja .first_bigger
+
+    # iterates to the next iteration
+    incq %r8
+    cmp %rcx, %r8
+    jb .pstrcmp_loop
+
+    # ends loop and decides by the shorter string
+    popq %rax
+    jmp *%rax
+
+.first_smaller:
+    # returns -1
+    movl %-1, %eax
+    popq %rbp
+    ret
+
+.first_bigger:
+    # returns 1
+    movl %1, %eax
+    popq %rbp
+    ret
+
+.both_equal:
+    # returns 0
+    xorq %rax, %rax
+    popq %rbp
+    ret
+
+
+
+.global pstrrev
+.type pstrrev, @function
+pstrrev:
+    # enter
+    pushq %rbp
+    movq %rsp, %rbp
+
+    # gets the pstr's length
+    # (pointer to it already in rdi)
+    xorq %rax, %rax # rax = length
+    call pstrlen
+
+    # sets the counter for the loop that goes through the string to 0
+    xorq %rcx, %rcx
+
+# goes through the string and pushes each char to the stack
+.pstrrev_first_loop:
+    # gets the next char and stores it in rdx
+    # then pushes it to the stack
+    xorq %rdx, %rdx
+    movb %rdi(1, %rcx, 1), %dl
+    decq %rsp
+    movb %dl, (%rsp)
+
+    # goes the next iteration
+    incq %rcx
+    cmp %rax, %rcx
+    jb .pstrrev_first_loop
+    
+    xorq %rcx, %rcx
+
+# goes throug the string and pops each char from the stack and puts in the string
+.pstrrev_second_loop:
+    # saves the next char address in rdx
+    leaq %rdi(1, %rcx, 1), %rdx
+
+    # pops the next char from the stack and puts it in the string
+    movb (%rsp), %sil
+    incq %rsp
+    movb %sil, (%rdx)
+
+    # goes through the next iteration
+    incq %rcx
+    cmp %rax, %rcx
+    jb .pstrrev_second_loop
+
+# exits
+.exit:
+    # puts the pointer in rax
+    movq %rdi, %rax
+    movq %rbp, %rsp
+    popq %rbp
+    ret
+
+
+
 
