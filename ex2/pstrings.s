@@ -1,3 +1,9 @@
+.extern printf
+.section .rodata
+invalid_range_message:
+    .string "invalid input!\n"
+
+
 .section .text
 .global swapCase
 .type swapCase, @function
@@ -11,13 +17,16 @@ swapCase:
     xorq %rax, %rax
     call pstrlen # now al = pstring.len
 
-    cmpb $0, %al
+    # makes rcx point to the start of the string
+    movq %rdi, %rcx
+    incq %rcx
+    cmpb $0, %al # in case length is 0
     ja .while_loop
 
 # exist, for the swapCase function
 .swapCase_exit:
     # Exits
-    xorq %rax, %rax
+    xorq %rdi, %rax # just returns the given pointer
     movq %rbp, %rsp
     popq %rbp
     ret
@@ -81,4 +90,78 @@ pstrlen:
     movq %rbp, %rsp
     popq %rbp
     ret
+
+
+
+
+.global pstrijcpy
+.type pstrijcpy, @function
+pstrijcpy:
+    # Enter
+    pushq %rbp
+    movq %rsp, %rbp
+
+    # gets the dest's length (pointer is already in rdi)
+    xorq %rax, %rax
+    call pstrlen
     
+    # moves dest's length to a different register,
+    # and moves source to rdi and gets its length
+    # in the end of this:
+    # rax = source's length
+    # r9 = dest's length
+    # r8 points to dest
+    # rsi points to source
+    # rdx = i
+    # rcx = j
+    xorq %rcx, %rcx
+    movb %rax, %r9
+    movq %rdi, %r8
+    movq %rsi, %rdi
+    xorq %rax, %rax
+    call pstrlen
+
+.check_valid_length:
+    # checks if i > j
+    cmpq %rcx, %rdx
+    ja .invalid_range
+
+    # checks if j => source's length
+    comq %rax, %rcx
+    jae .invalid_range
+
+    # checks if j => dest's length
+    comq %r9, %rcx
+    jae .invalid_range
+
+# loops through the strings range
+.pstrijcpy_loop:
+    # saves the source's string i's char in r10
+    movq %rax(1, %rdx, 1), %r10
+
+    # put the char in dest
+    movq %r10, %r9(1, %rdx, 1)
+
+    # increments to the next iteration
+    incq %rdx
+    cmpq %rcx, %rdx
+    ja .pstrijcpy_exit # jumps if i > j
+    jmp .pstrijcpy_loop
+
+# in case the range is invalid prints what's needed
+.invalid_range:
+    movq invalid_range_message, %rdi
+    call printf
+    .jmp .pstrijcpy_exit
+
+.pstrijcpy_exit:
+    popq %rbp
+    movq %r8, %rax
+    ret
+
+
+
+
+.global pstrcmp
+.type pstrcmp, @function
+
