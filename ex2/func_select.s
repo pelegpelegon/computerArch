@@ -1,4 +1,11 @@
 .extern printf
+.extern pstrlen
+.extern swapCase
+.extern pstrijcpy
+.extern pstrcmp
+.extern pstrrev
+
+
 .section .rodata
 jump_table:
     .quad .chose_31
@@ -15,11 +22,6 @@ jump_table:
     .quad .chose_42
 
 invalid_message: .string "invalid option!\n”
-
-
-
-
-
 
 
 .section .text

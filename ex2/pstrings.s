@@ -156,8 +156,9 @@ pstrijcpy:
     .jmp .pstrijcpy_exit
 
 .pstrijcpy_exit:
-    popq %rbp
     movq %r8, %rax
+    movq %rbp, %rsp
+    popq %rbp
     ret
 
 
@@ -237,18 +238,21 @@ pstrcmp:
 .first_smaller:
     # returns -1
     movl %-1, %eax
+    movq %rbp, %rsp
     popq %rbp
     ret
 
 .first_bigger:
     # returns 1
     movl %1, %eax
+    movq %rbp, %rsp
     popq %rbp
     ret
 
 .both_equal:
     # returns 0
     xorq %rax, %rax
+    movq %rbp, %rsp
     popq %rbp
     ret
 
