@@ -15,18 +15,22 @@ swapCase:
     # gets the pstring's length,
     # the pstring's pointer is still in %rdi
     xorq %rax, %rax
-    call pstrlen # now al = pstring.len
+    call pstrlen
+    # now al = pstring.len
+
 
     # makes rcx point to the start of the string
     movq %rdi, %rcx
     incq %rcx
-    cmpb $0, %al # in case length is 0
+    # in case length is 0
+    cmpb $0, %al
     ja .while_loop
 
 # exist, for the swapCase function
 .swapCase_exit:
     # Exits
-    xorq %rdi, %rax # just returns the given pointer
+    # just returns the given pointer
+    xorq %rdi, %rax 
     movq %rbp, %rsp
     popq %rbp
     ret
@@ -37,13 +41,17 @@ swapCase:
     movb (%rcx), %dl
 
     # checks if capital
-    subq $'A', %dl # makes 'A' the new zero
-    cmpb $25, %dl # compares with Z's dec value - 'A' dec value
+    # makes 'A' the new zero
+    subb $'A', %dl
+    # compares with Z's dec value - 'A' dec value
+    cmpb $25, %dl
     jb .capital_letter
 
     # checks if lower case
-    subq $32, %dl # makes 'a' the new zero, 32 = DEC('a' - 'A')
-    cmpb $25, %dl # compares with z's dec value - 'a' dec value
+    # makes 'a' the new zero, 32 = DEC('a' - 'A')
+    subb $32, %dl
+    # compares with z's dec value - 'a' dec value
+    cmpb $25, %dl 
     jb .lower__letter
 
 # moves to the next iteration in the while loop
@@ -115,7 +123,7 @@ pstrijcpy:
     # rdx = i
     # rcx = j
     xorq %rcx, %rcx
-    movb %rax, %r9
+    movq %rax, %r9
     movq %rdi, %r8
     movq %rsi, %rdi
     xorq %rax, %rax
@@ -127,36 +135,37 @@ pstrijcpy:
     ja .invalid_range
 
     # checks if j => source's length
-    comq %rax, %rcx
+    cmpq %rax, %rcx
     jae .invalid_range
 
     # checks if j => dest's length
-    comq %r9, %rcx
+    cmpq %r9, %rcx
     jae .invalid_range
 
 # loops through the strings range
 .pstrijcpy_loop:
     # saves the source's string i's char in r10
-    movb %rax(1, %rdx, 1), %r10b
+    movb 1(%rax, %rdx, 1), %r10b
 
     # put the char in dest
-    movb %r10b, %r9(1, %rdx, 1)
+    movb %r10b, 1(%r9, %rdx, 1)
 
     # increments to the next iteration
     incq %rdx
     cmpq %rcx, %rdx
-    ja .pstrijcpy_exit # jumps if i > j
+    # jumps if i > j
+    ja .pstrijcpy_exit
     jmp .pstrijcpy_loop
 
 # in case the range is invalid prints what's needed
 .invalid_range:
     movq invalid_range_message, %rdi
     movq %rax, %rax
+    pushq %r8
     call printf
-    .jmp .pstrijcpy_exit
 
 .pstrijcpy_exit:
-    movq %r8, %rax
+    popq %rax
     movq %rbp, %rsp
     popq %rbp
     ret
@@ -219,8 +228,10 @@ pstrcmp:
 
 # runs rcx times (the counter is saved on r8), and goes through the strings together
 .pstrcmp_loop:
-    movb %rdi(1, %r8, 1),%r9b # pstr1's r8's char
-    movb %rsi(1, %r8, 1),%r10b # pstr2's r8's char
+    # pstr1's r8's char
+    movb 1(%rdi, %r8, 1),%r9b
+    # pstr2's r8's char
+    movb 1(%rsi, %r8, 1),%r10b
 
     cmp %r10b, %r9b
     jb .first_smaller
@@ -237,14 +248,14 @@ pstrcmp:
 
 .first_smaller:
     # returns -1
-    movl %-1, %eax
+    movl $-1, %eax
     movq %rbp, %rsp
     popq %rbp
     ret
 
 .first_bigger:
     # returns 1
-    movl %1, %eax
+    movl $1, %eax
     movq %rbp, %rsp
     popq %rbp
     ret
@@ -267,8 +278,9 @@ pstrrev:
 
     # gets the pstr's length
     # (pointer to it already in rdi)
-    xorq %rax, %rax # rax = length
+    xorq %rax, %rax
     call pstrlen
+    # rax = length
 
     # sets the counter for the loop that goes through the string to 0
     xorq %rcx, %rcx
@@ -278,7 +290,7 @@ pstrrev:
     # gets the next char and stores it in rdx
     # then pushes it to the stack
     xorq %rdx, %rdx
-    movb %rdi(1, %rcx, 1), %dl
+    movb 1(%rdi, %rcx, 1), %dl
     decq %rsp
     movb %dl, (%rsp)
 
@@ -292,7 +304,7 @@ pstrrev:
 # goes throug the string and pops each char from the stack and puts in the string
 .pstrrev_second_loop:
     # saves the next char address in rdx
-    leaq %rdi(1, %rcx, 1), %rdx
+    leaq 1(%rdi, %rcx, 1), %rdx
 
     # pops the next char from the stack and puts it in the string
     movb (%rsp), %sil
@@ -311,7 +323,3 @@ pstrrev:
     movq %rbp, %rsp
     popq %rbp
     ret
-
-
-
-

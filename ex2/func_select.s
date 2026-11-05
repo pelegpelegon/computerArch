@@ -21,25 +21,18 @@ jump_table:
     .quad .invalid_option # 40
     .quad .chose_41
     .quad .chose_42
-
 invalid_message:
-    .string "invalid option!\n”
-
+    .string "invalid option!\n"
 message_length_31:
-    .string "first pstring length: %d, second pstring length: %d\n"
-
+    .string "first pstring length: %d, second pstring length: %d"
 message_print_pstr:
     .string "length: %d, string: %s\n"
-
 scanf_get_int:
     .string "%d"
-
 first_bigger_message:
     .string "First string is larger\n"
-
 first_smaller_message:
     .string "First string is smaller\n"
-
 both_equal_message:
     .string "Strings are equal\n"
 
@@ -50,20 +43,23 @@ both_equal_message:
 run_func:
     # Enter
     pushq %rbp
-    movq %rsp %rbp
+    movq %rsp, %rbp
 
     # subtracts 31 from the number input,
     # and compares it to 11 (the number of options in the jump table)
-    subl $31, %edi # edi = user's input (edi) - 31
+    # edi = user's input (edi) - 31
+    subl $31, %edi
     cmpl $11, %edi
     ja .invalid_option
-    jmp *jump_table(,%edi, 8) # goes to jump_table + edi * 8
+    # goes to jump_table + edi * 8
+    jmp *jump_table(,%edi, 8)
 
 
 .chose_31:
 
     # gets the first pstr's length
-    pushq %rdx # saves the second pointer in the stack
+    # saves the second pointer in the stack
+    pushq %rdx
     movq %rsi, %rdi
     xorq %rax, %rax
     call pstrlen
@@ -77,21 +73,26 @@ run_func:
 
     # prints and exists
     movq message_length_31, %rdi
-    popq %rsi # the first length
+    # the first length
+    popq %rsi 
     movq %rax, %rdx
     call printf
     jmp .exit
 
 .chose_33:
-    pushq %rsi # first pointer -> rbp
-    pushq %rdx # second pointer -> rbp + 8
+    # first pointer -> rbp
+    pushq %rsi
+    # second pointer -> rbp + 8
+    pushq %rdx
+
 
     # calls pstrlen swapCase on the first string
     # (pointer already in rdi)
     movq %rsi, %rdi
     xorq %rax, %rax
     call pstrlen
-    pushq %rax # first pstr's length -> rbp - 16
+    # first pstr's length -> rbp - 16
+    pushq %rax
 
     # restores the first pointer
     # and call swapCase on the first string
@@ -101,53 +102,60 @@ run_func:
 
     # calls swapCase and len on the second string
     # (need to restore the pointer after call in case the call ruins it)
-    movq (%rbp, 8, -1), %rdi
+    movq -8(%rbp), %rdi
     xorq %rax, %rax
     call pstrlen
-    pushq %rax # second pstr's length -> rbp - 24
-    movq (%rbp, 8, -1), %rdi
+    # second pstr's length -> rbp - 24
+    pushq %rax
+    movq -8(%rbp), %rdi
     xorq %rax, %rax
     call swapCase
 
     jmp .print_two_pstrs
 
 .chose_34:
-    pushq %rsi # first pointer -> rbp
-    pushq %rdx # second pointer -> rbp - 8
+    # first pointer -> rbp
+    pushq %rsi
+    # second pointer -> rbp - 8
+    pushq %rdx
 
     # allocates more memory for the input, and aligning the stack
     subq %rsp, 16
     movq scanf_get_int, %rdi
-    leaq (%rbp, 16, -1), %rsi
+    leaq -16(%rbp), %rsi
     xorq %rax, %rax
-    call scanf # i = rsp - 16
+    call scanf
+    # i = rsp - 16
+
 
     movq scanf_get_int, %rdi
-    leaq (%rbp, 20, -1), %rsi
-    call scanf # j = rsp - 20
+    leaq -20(%rbp), %rsi
+    call scanf
+    # j = rsp - 20
+
 
     # transfers the first bytes of i and j (to the function)
     xorq %rdx, %rdx
     xorq %rcx, %rcx
-    movb (%rbp, 16, -1), %dl
-    movb (%rbp, 20, -1), %cl
+    movb -16(%rbp), %dl
+    movb -20(%rbp), %cl
 
     # calls the function
     movq (%rbp), %rdi
-    movq (%rbp, 8, -1), %rsi
+    movq -8(%rbp), %rsi
     call pstrijcpy
 
     # gets the first string length
     movq (%rbp), %rdi
     xorq %rax, %rax
     call pstrlen
-    movq %rax, (%rbp, 16, -1)
+    movq %rax, -16(%rbp)
 
     # gets the second string length
-    movq (%rbp, 8, -1), %rdi
+    movq -8(%rbp), %rdi
     xorq %rax, %rax
     call pstrlen
-    movq %rax, (%rbp, 24, -1)
+    movq %rax, -24(%rbp)
 
     jmp .print_two_pstrs
 
@@ -181,31 +189,11 @@ run_func:
     call printf
     jmp .exit
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .chose_42:
-    pushq %rsi # first pointer -> rbp
-    pushq %rdx # second pointer -> rbp - 8
+    # first pointer -> rbp
+    pushq %rsi
+    # second pointer -> rbp - 8
+    pushq %rdx
 
 
     # calls the function
@@ -213,7 +201,7 @@ run_func:
     xorq %rax, %rax
     call pstrrev
 
-    movq (%rbp, 8, -1), %rdi
+    movq -8(%rbp), %rdi
     xorq %rax, %rax
     call pstrrev
 
@@ -224,7 +212,7 @@ run_func:
     pushq %rax
 
     # gets the second string length
-    movq (%rbp, 8, -1), %rdi
+    movq -8(%rbp), %rdi
     xorq %rax, %rax
     call pstrlen
     pushq %rax
@@ -249,19 +237,18 @@ run_func:
     movq message_print_pstr, %rdi
 
     # prints first pstr
-    movq (%rsp, 16, -1), %rsi
+    movq -16(%rsp), %rsi
     movq (%rsp), %rdx
     xorq %rax, %rax
     call printf
 
     # prints the second pstr
-    movq (%rsp, 24, -1), %rsi
-    movq (%rsp, 8, -1), %rdx
+    movq -24(%rsp), %rsi
+    movq -8(%rsp), %rdx
     xorq %rax, %rax
     call printf
 
     jmp .exit
-
 
 
 .exit:
