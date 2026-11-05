@@ -72,7 +72,7 @@ run_func:
     call pstrlen
 
     # prints and exists
-    movq message_length_31, %rdi
+    movq message_length_31(%rip), %rdi
     # the first length
     popq %rsi 
     movq %rax, %rdx
@@ -121,14 +121,14 @@ run_func:
 
     # allocates more memory for the input, and aligning the stack
     subq %rsp, 16
-    movq scanf_get_int, %rdi
+    movq scanf_get_int(%rip), %rdi
     leaq -16(%rbp), %rsi
     xorq %rax, %rax
     call scanf
     # i = rsp - 16
 
 
-    movq scanf_get_int, %rdi
+    movq scanf_get_int(%rip), %rdi
     leaq -20(%rbp), %rsi
     call scanf
     # j = rsp - 20
@@ -172,19 +172,19 @@ run_func:
     jb .first_smaller
 
 .first_bigger:
-    movq first_bigger_message, %rdi
+    movq first_bigger_message(%rip), %rdi
     xorq %rax, %rax
     call printf
     jmp .exit
 
 .first_smaller:
-    movq first_smaller_message, %rdi
+    movq first_smaller_message(%rip), %rdi
     xorq %rax, %rax
     call printf
     jmp .exit
 
 .both_equal:
-    movq both_equal_message, %rdi
+    movq both_equal_message(%rip), %rdi
     xorq %rax, %rax
     call printf
     jmp .exit
@@ -222,7 +222,7 @@ run_func:
 
 
 .invalid_option:
-    movq invalid_message, %rdi
+    movq invalid_message(%rip), %rdi
     xorq %rax, %rax
     call printf
 
@@ -234,7 +234,7 @@ run_func:
 # second length -> rbp - 24
 .print_two_pstrs:
     # prints and exists
-    movq message_print_pstr, %rdi
+    movq message_print_pstr(%rip), %rdi
 
     # prints first pstr
     movq -16(%rsp), %rsi
