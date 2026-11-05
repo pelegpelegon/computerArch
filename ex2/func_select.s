@@ -30,12 +30,16 @@ message_length_31:
 
 message_print_pstr:
     .string "length: %d, string: %s\n"
+
 scanf_get_int:
     .string "%d"
+
 first_bigger_message:
     .string "First string is larger\n"
+
 first_smaller_message:
     .string "First string is smaller\n"
+
 both_equal_message:
     .string "Strings are equal\n"
 
@@ -115,6 +119,7 @@ run_func:
     subq %rsp, 16
     movq scanf_get_int, %rdi
     leaq (%rbp, 16, -1), %rsi
+    xorq %rax, %rax
     call scanf # i = rsp - 16
 
     movq scanf_get_int, %rdi
@@ -155,7 +160,8 @@ run_func:
     call pstrcmp
 
     cmp $0, %rax
-
+    je .both_equal
+    jb .first_smaller
 
 .first_bigger:
     movq first_bigger_message, %rdi
@@ -198,6 +204,35 @@ run_func:
 
 
 .chose_42:
+    pushq %rsi # first pointer -> rbp
+    pushq %rdx # second pointer -> rbp - 8
+
+
+    # calls the function
+    movq (%rbp), %rdi
+    xorq %rax, %rax
+    call pstrrev
+
+    movq (%rbp, 8, -1), %rdi
+    xorq %rax, %rax
+    call pstrrev
+
+    # gets the first string length
+    movq (%rbp), %rdi
+    xorq %rax, %rax
+    call pstrlen
+    pushq %rax
+
+    # gets the second string length
+    movq (%rbp, 8, -1), %rdi
+    xorq %rax, %rax
+    call pstrlen
+    pushq %rax
+
+    jmp .print_two_pstrs
+
+
+
 .invalid_option:
     movq invalid_message, %rdi
     xorq %rax, %rax
