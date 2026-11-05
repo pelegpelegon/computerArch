@@ -151,7 +151,7 @@ pstrijcpy:
 # in case the range is invalid prints what's needed
 .invalid_range:
     movq invalid_range_message, %rdi
-    xorq %rax, %rax
+    movq %rax, %rax
     call printf
     .jmp .pstrijcpy_exit
 

@@ -32,6 +32,12 @@ message_print_pstr:
     .string "length: %d, string: %s\n"
 scanf_get_int:
     .string "%d"
+first_bigger_message:
+    .string "First string is larger\n"
+first_smaller_message:
+    .string "First string is smaller\n"
+both_equal_message:
+    .string "Strings are equal\n"
 
 
 .section .text
@@ -53,80 +59,178 @@ run_func:
 .chose_31:
 
     # gets the first pstr's length
+    pushq %rdx # saves the second pointer in the stack
     movq %rsi, %rdi
     xorq %rax, %rax
     call pstrlen
-    movq %rax, %rcx
+    popq %rsi
+    pushq %rax
 
     # gets the second pstr's length
-    movq %rdx, %rdi
+    movq %rsi, %rdi
     xorq %rax, %rax
     call pstrlen
 
     # prints and exists
     movq message_length_31, %rdi
-    movq %rcx, %rsi
+    popq %rsi # the first length
     movq %rax, %rdx
     call printf
     jmp .exit
 
 .chose_33:
+    pushq %rsi # first pointer -> rbp
+    pushq %rdx # second pointer -> rbp + 8
+
     # calls pstrlen swapCase on the first string
     # (pointer already in rdi)
+    movq %rsi, %rdi
     xorq %rax, %rax
     call pstrlen
-    movq %rax, %r8 # r8 = first pstr's length
+    pushq %rax # first pstr's length -> rbp - 16
+
+    # restores the first pointer
+    # and call swapCase on the first string
+    movq (%rbp), %rdi
     xorq %rax, %rax
     call swapCase
 
-    # calls swapCase on the second string
-    # (rax currently stores the first string's pointer)
-    movq %rsi, %rdi
-    movq %rax, %rsi
+    # calls swapCase and len on the second string
+    # (need to restore the pointer after call in case the call ruins it)
+    movq (%rbp, 8, -1), %rdi
     xorq %rax, %rax
     call pstrlen
-    movq %rax, %r9 # r9 - second pstr's length
+    pushq %rax # second pstr's length -> rbp - 24
+    movq (%rbp, 8, -1), %rdi
     xorq %rax, %rax
     call swapCase
 
     jmp .print_two_pstrs
 
 .chose_34:
+    pushq %rsi # first pointer -> rbp
+    pushq %rdx # second pointer -> rbp - 8
 
+    # allocates more memory for the input, and aligning the stack
+    subq %rsp, 16
+    movq scanf_get_int, %rdi
+    leaq (%rbp, 16, -1), %rsi
+    call scanf # i = rsp - 16
 
-# MAKE SURE BEFORE I CALL A FUNCTION BACK UP EVERYTHING THATS ON REGISTER TO THE STACK IN CASE IT IS CHANGED
+    movq scanf_get_int, %rdi
+    leaq (%rbp, 20, -1), %rsi
+    call scanf # j = rsp - 20
+
+    # transfers the first bytes of i and j (to the function)
+    xorq %rdx, %rdx
+    xorq %rcx, %rcx
+    movb (%rbp, 16, -1), %dl
+    movb (%rbp, 20, -1), %cl
+
+    # calls the function
+    movq (%rbp), %rdi
+    movq (%rbp, 8, -1), %rsi
+    call pstrijcpy
+
+    # gets the first string length
+    movq (%rbp), %rdi
+    xorq %rax, %rax
+    call pstrlen
+    movq %rax, (%rbp, 16, -1)
+
+    # gets the second string length
+    movq (%rbp, 8, -1), %rdi
+    xorq %rax, %rax
+    call pstrlen
+    movq %rax, (%rbp, 24, -1)
+
+    jmp .print_two_pstrs
+
 
 .chose_41:
+
+    # calls pstrcmp
+    movq %rsi, %rdi
+    movq %rdx, %rsi
+    call pstrcmp
+
+    cmp $0, %rax
+
+
+.first_bigger:
+    movq first_bigger_message, %rdi
+    xorq %rax, %rax
+    call printf
+    jmp .exit
+
+.first_smaller:
+    movq first_smaller_message, %rdi
+    xorq %rax, %rax
+    call printf
+    jmp .exit
+
+.both_equal:
+    movq both_equal_message, %rdi
+    xorq %rax, %rax
+    call printf
+    jmp .exit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .chose_42:
 .invalid_option:
     movq invalid_message, %rdi
     xorq %rax, %rax
     call printf
 
+
+# MAKE SURE THE FOLLOWING STACK FRAME:
+# first pointer -> rbp
+# second pointer -> rbp - 8
+# first length -> rbp - 16
+# second length -> rbp - 24
+.print_two_pstrs:
+    # prints and exists
+    movq message_print_pstr, %rdi
+
+    # prints first pstr
+    movq (%rsp, 16, -1), %rsi
+    movq (%rsp), %rdx
+    xorq %rax, %rax
+    call printf
+
+    # prints the second pstr
+    movq (%rsp, 24, -1), %rsi
+    movq (%rsp, 8, -1), %rdx
+    xorq %rax, %rax
+    call printf
+
+    jmp .exit
+
+
+
 .exit:
     xorq %rax, %rax
     movq %rbp, %rsp
     popq %rbp
     ret
-
-# MAKE SURE RDI = SECOND PSTR, RSI = FIRST PSTR
-# AND R8 = FIRST'S LENGTH, R9 = SECOND'S LENGTH
-.print_two_pstrs:
-    # prints and exists
-    movq %rdi, %r10 # r10 = second pstr address (rdi and rsi swapped earlier)
-    movq %rsi, %r11 # r11 = first pstr address
-    movq message_print_pstr, %rdi
-
-    # prints first pstr
-    movq %r8, %rsi
-    movq 1(%r11), %rdx
-    xorq %rax, %rax
-    call printf
-
-    # prints the second pstr
-    movq %r9, %rsi
-    movq 1(%r10), %rdx
-    xorq %rax, %rax
-    call printf
-
-    jmp .exit
