@@ -30,7 +30,7 @@ swapCase:
 .swapCase_exit:
     # Exits
     # just returns the given pointer
-    xorq %rdi, %rax 
+    movq %rdi, %rax 
     movq %rbp, %rsp
     popq %rbp
     ret
@@ -45,14 +45,14 @@ swapCase:
     subb $'A', %dl
     # compares with Z's dec value - 'A' dec value
     cmpb $25, %dl
-    jb .capital_letter
+    jbe .capital_letter
 
     # checks if lower case
     # makes 'a' the new zero, 32 = DEC('a' - 'A')
     subb $32, %dl
     # compares with z's dec value - 'a' dec value
     cmpb $25, %dl 
-    jb .lower_letter
+    jbe .lower_letter
 
 # moves to the next iteration in the while loop
 .next:
@@ -68,15 +68,15 @@ swapCase:
 # here if the current letter is capital and changes it to lower case
 .capital_letter:
     # changes to lower case,
-    # 33 is the difference between capital and lower case in dec
-    addb $33, (%rcx)
+    # 32 is the difference between capital and lower case in dec
+    addb $32, (%rcx)
     jmp .next
 
 # here if the current letter is lower case and changes it to capital
 .lower_letter:
     # changes to uppper case,
-    # 33 is the difference between capital and lower case in dec
-    subb $33, (%rcx)
+    # 32 is the difference between capital and lower case in dec
+    subb $32, (%rcx)
     jmp .next
 
 
@@ -122,7 +122,6 @@ pstrijcpy:
     # rsi points to source
     # rdx = i
     # rcx = j
-    xorq %rcx, %rcx
     movq %rax, %r9
     movq %rdi, %r8
     movq %rsi, %rdi
@@ -145,10 +144,11 @@ pstrijcpy:
 # loops through the strings range
 .pstrijcpy_loop:
     # saves the source's string i's char in r10
-    movb 1(%rax, %rdx, 1), %r10b
+    movb 1(%rsi, %rdx, 1), %r10b
+    # 1(%rsi,%rdx,1)
 
     # put the char in dest
-    movb %r10b, 1(%r9, %rdx, 1)
+    movb %r10b, 1(%r8, %rdx, 1)
 
     # increments to the next iteration
     incq %rdx
@@ -159,12 +159,15 @@ pstrijcpy:
 
 # in case the range is invalid prints what's needed
 .invalid_range:
-    movq invalid_range_message, %rdi
+    leaq invalid_range_message, %rdi
     movq %rax, %rax
     pushq %r8
+    # alining the stack
+    subq $8, %rsp
     call printf
 
 .pstrijcpy_exit:
+    addq $8, %rsp
     popq %rax
     movq %rbp, %rsp
     popq %rbp
@@ -199,32 +202,41 @@ pstrcmp:
     # rsi points to pstr2
 
     # sets up the result to go to if the loop
-    # that goes through the strings and compares them finishes
-    # when both are equal until one of the strings end
+    # finishes when the strings are equal (in the loop)
     # (the loop runs the length of the shorter string)
     # when the first string is shorter then,
     # it should go to the first being bigger when the loop ends and both are equal
     # otherwise it should go to the first being smaller
     # when lengths are equal it goes to them being equal
-    cmpq %rax, %rdx
     xorq %r8, %r8
+    cmpq %rax, %rdx
     ja .first_length_bigger
     jb .first_length_smaller
 
 .length_equal:
     movq %rax, %rcx
-    pushq .both_equal
-    jmp .pstrcmp_loop
+    pushq $.both_equal
+    jmp .checks_zero
 
 .first_length_bigger:
     movq %rax, %rcx
-    pushq .first_smaller
-    jmp .pstrcmp_loop
+    pushq $.first_bigger
+    jmp .checks_zero
 
 .first_length_smaller:
     movq %rdx, %rcx
-    pushq .first_bigger
-    jmp .pstrcmp_loop
+    pushq $.first_smaller
+    jmp .checks_zero
+
+# in case at least one of the strings length is 0
+.checks_zero:
+    cmp $0, %rcx
+    jne .pstrcmp_loop
+
+    # when shortest length is zero ends without loop
+    popq %rax
+    jmp *%rax
+
 
 # runs rcx times (the counter is saved on r8), and goes through the strings together
 .pstrcmp_loop:
