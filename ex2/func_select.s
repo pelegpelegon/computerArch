@@ -36,7 +36,8 @@ first_smaller_message:
     .string "First string is smaller\n"
 both_equal_message:
     .string "Strings are equal\n"
-
+invalid_range_message:
+    .string "invalid input!\n"
 
 .section .text
 .global run_func
@@ -135,18 +136,32 @@ run_func:
     call scanf
     # j = rbp - 24
 
-
-    # transfers the first bytes of i and j (to the function)
-    xorq %rdx, %rdx
-    xorq %rcx, %rcx
-    movb -20(%rbp), %dl
-    movb -24(%rbp), %cl
+    # checks if i and j are in unsigned char range (0-255)
+    # i
+    movl -20(%rbp), %edx
+    # j
+    movl -24(%rbp), %ecx
+    cmpl $0, %edx
+    jl .invalid_input
+    cmpl $255, %edx
+    jg .invalid_input
+    cmpl $0, %ecx
+    jl .invalid_input
+    cmpl $255, %ecx
+    jg .invalid_input
 
     # calls the function
     movq -8(%rbp), %rdi
     movq -16(%rbp), %rsi
     call pstrijcpy
+    jmp .pstrijcpy_print
 
+.invalid_input:
+    leaq invalid_range_message(%rip), %rdi
+    movq %rax, %rax
+    call printf
+
+.pstrijcpy_print:
     # gets the first string length
     movq -8(%rbp), %rdi
     xorq %rax, %rax
@@ -160,6 +175,7 @@ run_func:
     movq %rax, -32(%rbp)
 
     jmp .print_two_pstrs
+
 
 
 .chose_41:
@@ -244,6 +260,8 @@ run_func:
     leaq message_print_pstr(%rip), %rdi
     movq -24(%rbp), %rsi
     movq -8(%rbp), %rdx
+    # increments to skip the length byte
+    incq %rdx
     xorq %rax, %rax
     call printf
 
@@ -251,6 +269,8 @@ run_func:
     leaq message_print_pstr(%rip), %rdi
     movq -32(%rbp), %rsi
     movq -16(%rbp), %rdx
+    # increments to skip the length byte
+    incq %rdx
     xorq %rax, %rax
     call printf
 

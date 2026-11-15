@@ -108,6 +108,7 @@ pstrijcpy:
     # Enter
     pushq %rbp
     movq %rsp, %rbp
+    pushq %rdi
 
     # gets the dest's length (pointer is already in rdi)
     xorq %rax, %rax
@@ -159,9 +160,8 @@ pstrijcpy:
 
 # in case the range is invalid prints what's needed
 .invalid_range:
-    leaq invalid_range_message, %rdi
+    leaq invalid_range_message(%rip), %rdi
     movq %rax, %rax
-    pushq %r8
     # alining the stack
     subq $8, %rsp
     call printf
