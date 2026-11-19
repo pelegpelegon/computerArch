@@ -36,4 +36,7 @@ and the main size is 0x44
 so main end in 0x117d
 
 with a little help from cutters reverse engineering,
- i was able to see that in function main there is a jump if equal right before a call to function give_flag (which i assume gives the flag)
+i was able to see that in function main there is a jump if equal right before a call to function give_flag (which i assume gives the flag)
+and more then that the jump is if a variable was a equal to zero, and in the start of the code the value zero is gets put in it so it will always equal zero,
+therefore there's always a jump before the call to give_flag,
+so all i need to do is change the command jz in 0x116a to NOP value (0x90)
