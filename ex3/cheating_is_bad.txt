@@ -1,0 +1,39 @@
+first thing i will do is go to the elf header at the start and examine it (end goal is to navigate to the section text)
+first i'll analize the elf header:
+    its little endian on x86 64 64 bit (as expected)
+    (so all addresses and offsets parts are 8 bytes and not 4)
+    program header offset = 0x40
+    section header offset = 0x36c8
+    elf header size = 0x40
+    program header entry size = 0x38
+    program header num = 0x0d = 13
+    section header entry size = 0x40
+    section header num = 0x1f = 31
+    section header string table index = 0x1e = 30
+
+section header for the sh string table is at (section header string table index) * (section header entry size) + (section header offset) = 3e48
+went to that address and got the offset = 0x35ac, and the size = 0x11a
+now i can go through the entries in the section headers and find the section text (by going to the sh string table and checking the name of the sections), and data and rodata and whatever may help (but likley whats needed is section text because thats where the code is)
+.text section header is at 0x3a88
+text section offset is 0x1050, and size of 0x1ca, which means it ends at 0x121A
+now we'll find the symbol table and then the location of function main
+
+we'll first locate the symbol table section header and find the location of the symbol table, and also the string table
+symtab section header = 0x3dc8
+symtab offset = 0x3050
+symtab size = 0x0378 = 888
+symtab entry size = 0x18
+symtab end point = 0x33C8 (calculated with the offset and size)
+
+strtab section header = 0x3e08
+strtab offset = 0x33c8
+strtab size = 0x1e4
+
+now with the string table i can find which entry in the symbol table is of function main
+found main symtab entry at 0x3350
+so mains st_value is 0x1139 (so thats where in section text is the main function)
+and the main size is 0x44
+so main end in 0x117d
+
+with a little help from cutters reverse engineering,
+ i was able to see that in function main there is a jump if equal right before a call to function give_flag (which i assume gives the flag)
